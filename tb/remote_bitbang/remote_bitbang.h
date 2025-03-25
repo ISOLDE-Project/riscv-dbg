@@ -5,6 +5,9 @@
 
 #include <stdint.h>
 #include <sys/types.h>
+#include "svdpi.h"
+
+extern "C" int jtag_tick (int port, svBit* jtag_TCK, svBit* jtag_TMS, svBit* jtag_TDI, svBit* jtag_TRSTn, svBit jtag_TDO);
 
 #define VERBOSE 0
 
@@ -29,9 +32,10 @@ extern ssize_t recv_start, recv_end;
 int rbs_init(uint16_t port);
 
 // Do a bit of work.
-void rbs_tick(unsigned char *jtag_tck, unsigned char *jtag_tms,
-              unsigned char *jtag_tdi, unsigned char *jtag_trstn,
-              unsigned char jtag_tdo);
+// void rbs_tick(unsigned char *jtag_tck, unsigned char *jtag_tms,
+//               unsigned char *jtag_tdi, unsigned char *jtag_trstn,
+//               unsigned char jtag_tdo);
+void  rbs_tick( svBit* jtag_TCK, svBit* jtag_TMS, svBit* jtag_TDI, svBit* jtag_TRSTn, svBit jtag_TDO);
 
 unsigned char rbs_done();
 

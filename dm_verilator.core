@@ -1,0 +1,19 @@
+CAPI=2:
+# Copyleft 2025 ISOLDE
+# Licensed under the Apache License, Version 2.0, see LICENSE for details.
+# SPDX-License-Identifier: Apache-2.0
+
+name: "isolde:dv_verilator:debug_module_verilator"
+description: "Verilator debug module utilities"
+filesets:
+  files_cpp:
+    files:
+      - tb/remote_bitbang/remote_bitbang.c
+      - tb/remote_bitbang/sim_jtag.c
+      - tb/remote_bitbang/remote_bitbang.h: { is_include_file: true }
+    file_type: cppSource
+
+targets:
+  default:
+    filesets:
+      - files_cpp

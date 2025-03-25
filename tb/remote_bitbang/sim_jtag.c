@@ -7,10 +7,8 @@
 
 int init = 0;
 
-int jtag_tick(int port, unsigned char *jtag_TCK, unsigned char *jtag_TMS,
-              unsigned char *jtag_TDI, unsigned char *jtag_TRSTn,
-              unsigned char jtag_TDO)
 
+int jtag_tick (int port, svBit* jtag_TCK, svBit* jtag_TMS, svBit* jtag_TDI, svBit* jtag_TRSTn, svBit jtag_TDO)
 {
     if (!init) {
 	if (port < 0 || port > UINT16_MAX)

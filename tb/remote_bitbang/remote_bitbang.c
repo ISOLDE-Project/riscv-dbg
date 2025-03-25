@@ -114,9 +114,10 @@ void rbs_accept()
     }
 }
 
-void rbs_tick(unsigned char *jtag_tck, unsigned char *jtag_tms,
-              unsigned char *jtag_tdi, unsigned char *jtag_trstn,
-              unsigned char jtag_tdo)
+// void rbs_tick(unsigned char *jtag_tck, unsigned char *jtag_tms,
+//               unsigned char *jtag_tdi, unsigned char *jtag_trstn,
+//               unsigned char jtag_tdo)
+void  rbs_tick( svBit* jtag_tck, svBit* jtag_tms, svBit* jtag_tdi, svBit* jtag_trstn, svBit jtag_tdo)
 {
     if (client_fd > 0) {
         tdo = jtag_tdo;
