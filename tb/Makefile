@@ -76,6 +76,10 @@ RTLSRC_VERI_TB		:= boot_rom.sv \
 				SimJTAG.sv \
 				tb_top_verilator.sv
 
+CSRC_VERI_TB := $(addprefix remote_bitbang/,\
+							remote_bitbang.c \
+							sim_jtag.c)
+
 RTLSRC_INCDIR		:= riscv/rtl/include common_cells/include
 
 RTLSRC_FPNEW_PKG	:= fpnew/src/fpnew_pkg.sv
@@ -198,23 +202,23 @@ VERI_TRACE="--trace"
 VERI_CFLAGS+="-DVCD_TRACE"
 endif
 VPATH += ../
-verilate: testbench_verilator
+verilate:  download_deps  testbench_verilator
 
 # We set the RUNPATH (not RPATH, allows LD_LIBRARY_PATH to overwrite) to
 # remote_bitbang and manually link against librbs_veri since putting in
 # librbs_veri.so as parameter doesn't work because it searches in the build
 # directory
 testbench_verilator: $(RTLSRC_VERI_TB) $(RTLSRC_PKG) $(RTLSRC) \
-			remote_bitbang/librbs_veri.so
-	$(VERILATOR) --cc --sv --exe $(VERI_TRACE) \
+			$(CSRC_VERI_TB)
+	$(VERILATOR) --cc --sv --exe --timing $(VERI_TRACE) \
 		--Wno-lint --Wno-UNOPTFLAT --Wno-BLKANDNBLK --Wno-COMBDLY \
 		--Wno-MODDUP $(addprefix +incdir+,$(RTLSRC_INCDIR)) --top-module \
 		tb_top_verilator --Mdir $(VERI_DIR) \
-		-CFLAGS "-std=gnu++11 $(VERI_CFLAGS)" $(VERI_COMPILE_FLAGS) \
+		-CFLAGS "-std=c++17  $(VERI_CFLAGS)" $(VERI_COMPILE_FLAGS) \
 		$(RTLSRC_PKG) $(RTLSRC_VERI_TB) $(RTLSRC) \
 		-LDFLAGS "-L../remote_bitbang \
-		-Wl,--enable-new-dtags -Wl,-rpath,remote_bitbang -lrbs_veri" \
-		tb_top_verilator.cpp
+		-Wl,--enable-new-dtags " \
+		tb_top_verilator.cpp $(CSRC_VERI_TB)
 	cd $(VERI_DIR) && $(MAKE) -f Vtb_top_verilator.mk
 	cp $(VERI_DIR)/Vtb_top_verilator testbench_verilator
 
