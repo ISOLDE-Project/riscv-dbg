@@ -1,3 +1,4 @@
+# Copyleft 2025 ISOLDE
 # Copyright 2019 Clifford Wolf
 # Copyright 2019 Robert Balas
 # Copyright 2020 ETH Zurich and University of Bologna.
@@ -15,6 +16,9 @@
 
 # Author: Robert Balas (balasr@iis.ee.ethz.ch)
 # Description: All in one. Uses parts of picorv32's makefile.
+
+ROOT_DIR            :=  $(shell git rev-parse --show-toplevel)
+mkfile_path         :=  $(shell git rev-parse --show-toplevel)/tb/Makefile
 
 # minimum tool versions supported
 MIN_VSIM_VERSION	= "questa-2020.1"
@@ -148,12 +152,12 @@ RTLSRC_VLOG_TB_TOP	:= $(basename $(notdir $(RTLSRC_TB_TOP)))
 RTLSRC_VOPT_TB_TOP	:= $(addsuffix _vopt, $(RTLSRC_VLOG_TB_TOP))
 
 # riscv bare metal cross compiling
-RISCV			?= $(HOME)/.riscv
-RV_CC			= $(RISCV)/bin/riscv32-unknown-elf-gcc
-RV_CFLAGS		= -march=rv32imc -Os -g
-RV_LDFLAGS		= -nostdlib -static -T prog/link.ld
-RV_LDLIBS		= -lc -lm -lgcc
-RV_OBJCOPY		= $(RISCV)/bin/riscv32-unknown-elf-objcopy
+LLVM_TOOLCHAIN	 ?= $(ROOT_DIR)/../../install/riscv-llvm
+RV_CC			 = $(LLVM_TOOLCHAIN)/bin/clang
+RV_CFLAGS		 = -march=rv32imc -Os -g
+RV_LDFLAGS		 = -nostdlib -static -T prog/link.ld
+#RV_LDLIBS		 = -lc -lm -lgcc
+RV_OBJCOPY		 = $(LLVM_TOOLCHAIN)/bin/riscv32-unknown-elf-objcopy 
 
 # assume verilator if no target chosen
 .DEFAULT_GOAL := veri-run
