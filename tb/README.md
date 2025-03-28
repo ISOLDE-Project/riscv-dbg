@@ -37,3 +37,6 @@ In each terminal from bellow, make sure you run `. ./eth.sh`
 2. (in new terminal) `openocd -f dm_compliance_test.cfg`
 3. (in new terminal)  `riscv32-unknown-elf-gdb prog/test.elf`  
   3.1 (in gdb terminal) `target extended-remote localhost:3333`
+  3.2 (in gdb terminal) `monitor reset halt`  
+  3.3 (in gdb terminal) `load`  
+  3.4 (in gdb terminal) `c`  --> **as per 27.03.2025 not working**
