@@ -32,6 +32,12 @@ build and link your own program. Look into the `prog` folder for an example.
 
 Example Run
 -----------------------
+1. `make veri-run`
+3. (in new terminal) `export JTAG_VPI_PORT=port_name_from 1.`
+2. (in new terminal) `openocd -f dm_compliance_test.cfg`
+4. Now you can connect with gdb and interact with the testbench
+ISOLDE Example Run
+-----------------------
 In each terminal from bellow, make sure you run `. ./eth.sh`  
 1. `make veri-run`
 2. (in new terminal) `openocd -f dm_compliance_test.cfg`
