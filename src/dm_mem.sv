@@ -244,7 +244,7 @@ module dm_mem #(
     assign rdata_o = (word_enable32_q) ? word_mux[32+:32] : word_mux[0+:32];
   end
   assign gnt_o   = req_i;
-  assign valid_d = ~err_d;
+  assign valid_d = gnt_o;
   assign valid_o = valid_q;
   // read/write logic
   logic [dm::DataCount-1:0][31:0] data_bits;
