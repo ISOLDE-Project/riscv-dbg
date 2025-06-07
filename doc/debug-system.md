@@ -623,3 +623,5 @@ riscv set_ir dmi 0x23
 
 adapter_khz     1000
 ```
+# OpenOCD General Commands
+[https://openocd.org/doc/html/General-Commands.html?utm_source=chatgpt.com](https://openocd.org/doc/html/General-Commands.html?utm_source=chatgpt.com)
