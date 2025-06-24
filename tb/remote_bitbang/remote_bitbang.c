@@ -13,7 +13,7 @@
 
 #include "remote_bitbang.h"
 #include <csignal>
-
+#include <verilated.h>
 // Public globals, declared in remote_bitbang.h
 
 int rbs_err;
@@ -34,7 +34,8 @@ handle_sigterm(int sig)
     fprintf(stderr, "\nCaught SIGTERM (signal %d). Shutting down server...\n",
             sig);
     rbs_stop(); // your function to stop server and close sockets
-    exit(0);
+    //exit(0);
+    Verilated::gotFinish(true);  // Graceful termination
 }
 
 int
@@ -51,7 +52,8 @@ rbs_init(uint16_t port)
     if (socket_fd == -1) {
         fprintf(stderr, "remote_bitbang failed to make socket: %s (%d)\n",
                 strerror(errno), errno);
-        abort();
+        //abort();
+         Verilated::gotFinish(true);  // Graceful termination
     }
 
     fcntl(socket_fd, F_SETFL, O_NONBLOCK);
@@ -60,7 +62,8 @@ rbs_init(uint16_t port)
         == -1) {
         fprintf(stderr, "remote_bitbang failed setsockopt: %s (%d)\n",
                 strerror(errno), errno);
-        abort();
+        //abort();
+         Verilated::gotFinish(true);  // Graceful termination
     }
 
     struct sockaddr_in addr;
@@ -72,20 +75,23 @@ rbs_init(uint16_t port)
     if (bind(socket_fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
         fprintf(stderr, "remote_bitbang failed to bind socket: %s (%d)\n",
                 strerror(errno), errno);
-        abort();
+        //abort();
+         Verilated::gotFinish(true);  // Graceful termination
     }
 
     if (listen(socket_fd, 1) == -1) {
         fprintf(stderr, "remote_bitbang failed to listen on socket: %s (%d)\n",
                 strerror(errno), errno);
-        abort();
+       // abort();
+        Verilated::gotFinish(true);  // Graceful termination
     }
 
     socklen_t addrlen = sizeof(addr);
     if (getsockname(socket_fd, (struct sockaddr *)&addr, &addrlen) == -1) {
         fprintf(stderr, "remote_bitbang getsockname failed: %s (%d)\n",
                 strerror(errno), errno);
-        abort();
+       // abort();
+        Verilated::gotFinish(true);  // Graceful termination
     }
 
     tck   = 1;
@@ -113,7 +119,8 @@ rbs_accept()
                 fprintf(stderr, "failed to accept on socket: %s (%d)\n",
                         strerror(errno), errno);
                 again = 0;
-                abort();
+                //abort();
+                 Verilated::gotFinish(true);  // Graceful termination
             }
         } else {
             fcntl(client_fd, F_SETFL, O_NONBLOCK);
@@ -181,7 +188,8 @@ rbs_execute_command()
                         "remote_bitbang failed to read on socket: %s (%d)\n",
                         strerror(errno), errno);
                 again = 0;
-                abort();
+               // abort();
+                Verilated::gotFinish(true);  // Graceful termination
             }
         } else if (num_read == 0) {
             fprintf(stderr, "No command received. Stopping further reads.\n");
@@ -290,7 +298,8 @@ rbs_execute_command()
             if (bytes == -1) {
                 fprintf(stderr, "failed to write to socket: %s (%d)\n",
                         strerror(errno), errno);
-                abort();
+                //abort();
+                 Verilated::gotFinish(true);  // Graceful termination
             }
             if (bytes > 0) {
                 break;
