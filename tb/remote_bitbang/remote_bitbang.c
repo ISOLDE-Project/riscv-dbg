@@ -31,10 +31,9 @@ int client_fd;
 void
 handle_sigterm(int sig)
 {
-    fprintf(stderr, "\nCaught SIGTERM (signal %d). Shutting down server...\n",
-            sig);
+    fprintf(stderr, "\n%s:%d Caught SIGTERM (signal %d). Shutting down server...\n",
+            __FILE__,__LINE__,sig);
     rbs_stop(); // your function to stop server and close sockets
-    exit(0);
 }
 
 int
@@ -103,8 +102,8 @@ void
 rbs_accept()
 {
     fprintf(stderr, "Attempting to accept client socket\n");
-    int again = 1;
-    while (again != 0) {
+
+    while (1) {
         client_fd = accept(socket_fd, NULL, NULL);
         if (client_fd == -1) {
             if (errno == EAGAIN) {
@@ -112,17 +111,15 @@ rbs_accept()
             } else {
                 fprintf(stderr, "failed to accept on socket: %s (%d)\n",
                         strerror(errno), errno);
-                again = 0;
-                abort();
+                break;
             }
         } else {
             fcntl(client_fd, F_SETFL, O_NONBLOCK);
             fprintf(stderr, "Accepted successfully.");
-            again = 0;
+            break;
         }
     }
 }
-
 
 void
 rbs_tick(svBit *jtag_tck, svBit *jtag_tms, svBit *jtag_tdi, svBit *jtag_trstn,
@@ -181,7 +178,6 @@ rbs_execute_command()
                         "remote_bitbang failed to read on socket: %s (%d)\n",
                         strerror(errno), errno);
                 again = 0;
-                abort();
             }
         } else if (num_read == 0) {
             fprintf(stderr, "No command received. Stopping further reads.\n");
@@ -290,7 +286,6 @@ rbs_execute_command()
             if (bytes == -1) {
                 fprintf(stderr, "failed to write to socket: %s (%d)\n",
                         strerror(errno), errno);
-                abort();
             }
             if (bytes > 0) {
                 break;
@@ -337,5 +332,3 @@ rbs_stop()
     rbs_err = -1;
     fprintf(stderr, "JTAG remote bitbang server stopped\n");
 }
-
-

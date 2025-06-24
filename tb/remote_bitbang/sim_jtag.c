@@ -7,16 +7,18 @@
 
 int init = 0;
 
-
-int jtag_tick (int port, svBit* jtag_TCK, svBit* jtag_TMS, svBit* jtag_TDI, svBit* jtag_TRSTn, svBit jtag_TDO)
+int
+jtag_tick(int port, svBit *jtag_TCK, svBit *jtag_TMS, svBit *jtag_TDI,
+          svBit *jtag_TRSTn, svBit jtag_TDO)
 {
     if (!init) {
-	if (port < 0 || port > UINT16_MAX)
-	    fprintf(stderr, "Port number of out range: %d\n", port);
+        if (port < 0 || port > UINT16_MAX)
+            fprintf(stderr, "Port number of out range: %d\n", port);
         init = rbs_init(port);
+    } else {
+        rbs_tick(jtag_TCK, jtag_TMS, jtag_TDI, jtag_TRSTn, jtag_TDO);
     }
 
-    rbs_tick(jtag_TCK, jtag_TMS, jtag_TDI, jtag_TRSTn, jtag_TDO);
     if (VERBOSE)
         fprintf(
             stderr,
