@@ -81,17 +81,13 @@ module dm_csrs #(
   input  logic                              sberror_valid_i, // bus error occurred
   input  logic [2:0]                        sberror_i // bus error occurred
 );
+
   // the amount of bits we need to represent all harts
   localparam int unsigned HartSelLen = (NrHarts == 1) ? 1 : $clog2(NrHarts);
   localparam int unsigned NrHartsAligned = 2**HartSelLen;
 
   dm::dtm_op_e dtm_op;
   assign dtm_op = dm::dtm_op_e'(dmi_req_i.op);
-
-  logic        resp_queue_full;
-  logic        resp_queue_empty;
-  logic        resp_queue_push;
-  logic        resp_queue_pop;
 
   localparam dm::dm_csr_e DataEnd = dm::dm_csr_e'(dm::Data0 + {4'h0, dm::DataCount} - 8'h1);
   localparam dm::dm_csr_e ProgBufEnd = dm::dm_csr_e'(dm::ProgBuf0 + {4'h0, dm::ProgBufSize} - 8'h1);
@@ -182,9 +178,6 @@ module dm_csrs #(
 
   dm::dmi_resp_t resp_queue_inp;
 
-  assign dmi_resp_valid_o     = ~resp_queue_empty;
-  assign dmi_req_ready_o      = ~resp_queue_full;
-  assign resp_queue_push      = dmi_req_valid_i & dmi_req_ready_o;
   // SBA
   assign sbautoincrement_o = sbcs_q.sbautoincrement;
   assign sbreadonaddr_o    = sbcs_q.sbreadonaddr;
@@ -220,6 +213,9 @@ module dm_csrs #(
 
   // Get the data index, i.e. 0 for dm::Data0 up to 11 for dm::Data11
   assign dm_csr_addr = dm::dm_csr_e'({1'b0, dmi_req_i.addr});
+  logic unused_addr_bits;
+  assign unused_addr_bits = ^dmi_req_i.addr[31:$bits(dm_csr_addr)];
+
   // Xilinx Vivado 2020.1 does not allow subtraction of two enums; do the subtraction with logic
   // types instead.
   assign autoexecdata_idx = 4'({dm_csr_addr} - {dm::Data0});
@@ -585,28 +581,29 @@ module dm_csrs #(
   assign progbuf_o   = progbuf_q;
   assign data_o      = data_q;
 
-  assign resp_queue_pop = dmi_resp_ready_i & ~resp_queue_empty;
-
   assign ndmreset_o = dmcontrol_q.ndmreset;
 
+  logic unused_testmode;
+  assign unused_testmode = testmode_i;
+
   // response FIFO
-  fifo_v2 #(
-    .dtype            ( logic [$bits(dmi_resp_o)-1:0] ),
-    .DEPTH            ( 2                             )
+  prim_fifo_sync #(
+    .Width   ($bits(dmi_resp_o)),
+    .Pass    (1'b0),
+    .Depth   (2)
   ) i_fifo (
-    .clk_i,
-    .rst_ni,
-    .flush_i          ( ~dmi_rst_ni          ), // Flush the queue if the DTM is
-                                                // reset
-    .testmode_i       ( testmode_i           ),
-    .full_o           ( resp_queue_full      ),
-    .empty_o          ( resp_queue_empty     ),
-    .alm_full_o       (                      ),
-    .alm_empty_o      (                      ),
-    .data_i           ( resp_queue_inp       ),
-    .push_i           ( resp_queue_push      ),
-    .data_o           ( dmi_resp_o           ),
-    .pop_i            ( resp_queue_pop       )
+    .clk_i   ( clk_i                ),
+    .rst_ni  ( dmi_rst_ni           ), // reset only when system is re-set
+    .clr_i   ( 1'b0                 ),
+    .wdata_i ( resp_queue_inp       ),
+    .wvalid_i( dmi_req_valid_i      ),
+    .wready_o( dmi_req_ready_o      ),
+    .rdata_o ( dmi_resp_o           ),
+    .rvalid_o( dmi_resp_valid_o     ),
+    .rready_i( dmi_resp_ready_i     ),
+    .full_o  (                      ), // Unused
+    .depth_o (                      ), // Unused
+    .err_o   (                      )  // Unused
   );
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : p_regs

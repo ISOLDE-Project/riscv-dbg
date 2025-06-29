@@ -1,3 +1,4 @@
+# Copyleft 2025 ISOLDE
 # Copyright 2019 Clifford Wolf
 # Copyright 2019 Robert Balas
 # Copyright 2020 ETH Zurich and University of Bologna.
@@ -15,6 +16,9 @@
 
 # Author: Robert Balas (balasr@iis.ee.ethz.ch)
 # Description: All in one. Uses parts of picorv32's makefile.
+
+ROOT_DIR            :=  $(shell git rev-parse --show-toplevel)
+mkfile_path         :=  $(shell git rev-parse --show-toplevel)/tb/Makefile
 
 # minimum tool versions supported
 MIN_VSIM_VERSION	= "questa-2020.1"
@@ -75,6 +79,10 @@ RTLSRC_VERI_TB		:= boot_rom.sv \
 				mm_ram.sv \
 				SimJTAG.sv \
 				tb_top_verilator.sv
+
+CSRC_VERI_TB := $(addprefix remote_bitbang/,\
+							remote_bitbang.c \
+							sim_jtag.c)
 
 RTLSRC_INCDIR		:= riscv/rtl/include common_cells/include
 
@@ -144,12 +152,12 @@ RTLSRC_VLOG_TB_TOP	:= $(basename $(notdir $(RTLSRC_TB_TOP)))
 RTLSRC_VOPT_TB_TOP	:= $(addsuffix _vopt, $(RTLSRC_VLOG_TB_TOP))
 
 # riscv bare metal cross compiling
-RISCV			?= $(HOME)/.riscv
-RV_CC			= $(RISCV)/bin/riscv32-unknown-elf-gcc
-RV_CFLAGS		= -march=rv32imc -Os -g
-RV_LDFLAGS		= -nostdlib -static -T prog/link.ld
-RV_LDLIBS		= -lc -lm -lgcc
-RV_OBJCOPY		= $(RISCV)/bin/riscv32-unknown-elf-objcopy
+LLVM_TOOLCHAIN	 ?= $(ROOT_DIR)/../../install/riscv-llvm
+RV_CC			 = $(LLVM_TOOLCHAIN)/bin/clang
+RV_CFLAGS		 = -march=rv32imc -Os -g
+RV_LDFLAGS		 = -nostdlib -static -T prog/link.ld
+#RV_LDLIBS		 = -lc -lm -lgcc
+RV_OBJCOPY		 = $(LLVM_TOOLCHAIN)/bin/riscv32-unknown-elf-objcopy 
 
 # assume verilator if no target chosen
 .DEFAULT_GOAL := veri-run
@@ -198,23 +206,23 @@ VERI_TRACE="--trace"
 VERI_CFLAGS+="-DVCD_TRACE"
 endif
 VPATH += ../
-verilate: testbench_verilator
+verilate:  download_deps  testbench_verilator
 
 # We set the RUNPATH (not RPATH, allows LD_LIBRARY_PATH to overwrite) to
 # remote_bitbang and manually link against librbs_veri since putting in
 # librbs_veri.so as parameter doesn't work because it searches in the build
 # directory
 testbench_verilator: $(RTLSRC_VERI_TB) $(RTLSRC_PKG) $(RTLSRC) \
-			remote_bitbang/librbs_veri.so
-	$(VERILATOR) --cc --sv --exe $(VERI_TRACE) \
+			$(CSRC_VERI_TB)
+	$(VERILATOR) --cc --sv --exe --timing $(VERI_TRACE) \
 		--Wno-lint --Wno-UNOPTFLAT --Wno-BLKANDNBLK --Wno-COMBDLY \
 		--Wno-MODDUP $(addprefix +incdir+,$(RTLSRC_INCDIR)) --top-module \
 		tb_top_verilator --Mdir $(VERI_DIR) \
-		-CFLAGS "-std=gnu++11 $(VERI_CFLAGS)" $(VERI_COMPILE_FLAGS) \
+		-CFLAGS "-std=c++17  $(VERI_CFLAGS)" $(VERI_COMPILE_FLAGS) \
 		$(RTLSRC_PKG) $(RTLSRC_VERI_TB) $(RTLSRC) \
 		-LDFLAGS "-L../remote_bitbang \
-		-Wl,--enable-new-dtags -Wl,-rpath,remote_bitbang -lrbs_veri" \
-		tb_top_verilator.cpp
+		-Wl,--enable-new-dtags " \
+		tb_top_verilator.cpp $(CSRC_VERI_TB)
 	cd $(VERI_DIR) && $(MAKE) -f Vtb_top_verilator.mk
 	cp $(VERI_DIR)/Vtb_top_verilator testbench_verilator
 

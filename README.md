@@ -1,7 +1,7 @@
 # RISC-V Debug Support for various Cores
 
 This module is an implementation of a debug unit compliant with the [RISC-V
-debug specification](https://github.com/riscv/riscv-debug-spec) v0.13.1. It is
+debug specification](https://riscv.org/wp-content/uploads/2024/12/riscv-debug-release.pdf) v0.13.2. It is
 used in the [cva6](https://github.com/pulp-platform/cva6),
 [cv32e40p](https://github.com/pulp-platform/cv32e40p) and
 [ibex](https://github.com/lowRISC/ibex) cores.

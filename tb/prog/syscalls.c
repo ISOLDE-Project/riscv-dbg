@@ -21,8 +21,7 @@
 #include <newlib.h>
 #include <unistd.h>
 #include <errno.h>
-#undef errno
-extern int errno;
+
 
 /* write to this reg for outputting strings */
 #define STDOUT_REG 0x10000000
@@ -32,6 +31,47 @@ extern int errno;
 #define EXIT_REG 0x20000004
 
 #define STDOUT_FILENO 1
+
+
+/***
+/* ISOLDE work-around  */
+#undef errno
+//extern int errno;
+int errno;
+
+
+#define DEV_WRITE(addr, val) (*((volatile uint32_t *)(addr)) = val)
+#define DEV_READ(addr, val) (*((volatile uint32_t *)(addr)))
+
+void _putcf (void *, char c) {
+    DEV_WRITE(STDOUT_REG, (uint32_t)c); 
+  }
+  
+  
+  int putchar(char c){
+    _putcf (0,  c);
+    return 1;
+  }
+
+  int puts(char* msg){
+    int res = 0;
+    while(*msg){
+        putchar(*msg);
+        msg++;
+        res++;
+    }
+    return res;
+  }
+
+  void exit(int exit_code){
+    DEV_WRITE(EXIT_REG , (uint32_t)exit_code); 
+     while (1) {
+            asm volatile ("wfi");
+        }
+    }
+
+
+
 
 /* It turns out that older newlib versions use different symbol names which goes
  * against newlib recommendations. Anyway this is fixed in later version.
@@ -126,11 +166,11 @@ int _fstatat(int dirfd, const char *file, struct stat *st, int flags)
     return -1;
 }
 
-int _ftime(struct timeb *tp)
-{
-    errno = ENOSYS;
-    return -1;
-}
+// int _ftime(struct timeb *tp)
+// {
+//     errno = ENOSYS;
+//     return -1;
+// }
 
 char *_getcwd(char *buf, size_t size)
 {
@@ -207,10 +247,10 @@ long _sysconf(int name)
     return -1;
 }
 
-clock_t _times(struct tms *buf)
-{
-    return -1;
-}
+// clock_t _times(struct tms *buf)
+// {
+//     return -1;
+// }
 
 int _unlink(const char *name)
 {
@@ -218,11 +258,11 @@ int _unlink(const char *name)
     return -1;
 }
 
-int _utime(const char *path, const struct utimbuf *times)
-{
-    errno = ENOSYS;
-    return -1;
-}
+// int _utime(const char *path, const struct utimbuf *times)
+// {
+//     errno = ENOSYS;
+//     return -1;
+// }
 
 int _wait(int *status)
 {

@@ -17,14 +17,16 @@
 */
 
 module dmi_jtag #(
-  parameter logic [31:0] IdcodeValue = 32'h00000DB3
+  parameter logic [31:0] IdcodeValue = 32'h00000DB3,
+  parameter int unsigned NumDmiWordAbits = 16 // Number of DMI address bits (7 - 32)
 ) (
   input  logic         clk_i,      // DMI Clock
   input  logic         rst_ni,     // Asynchronous reset active low
   input  logic         testmode_i,
+  input  logic         test_rst_ni,
 
-  // active-low glitch free reset signal. Is asserted for one dmi clock cycle
-  // (clk_i) whenever the dmi_jtag is reset (POR or functional reset).
+  // active-low glitch free reset signal. Is asserted
+  // (clk_i) whenever the dmi_jtag is reset.
   output logic         dmi_rst_no,
   output dm::dmi_req_t dmi_req_o,
   output logic         dmi_req_valid_o,
@@ -58,14 +60,13 @@ module dmi_jtag #(
   logic tdi;
 
   logic dtmcs_select;
+  dm::dtmcs_t dtmcs_d, dtmcs_q;
 
   assign dmi_clear = jtag_dmi_clear || (dtmcs_select && update && dtmcs_q.dmihardreset);
 
   // -------------------------------
   // Debug Module Control and Status
   // -------------------------------
-
-  dm::dtmcs_t dtmcs_d, dtmcs_q;
 
   always_comb begin
     dtmcs_d = dtmcs_q;
@@ -78,7 +79,7 @@ module dmi_jtag #(
                       zero0        : '0,
                       idle         : 3'd1, // 1: Enter Run-Test/Idle and leave it immediately
                       dmistat      : error_q, // 0: No error, 2: Op failed, 3: too fast
-                      abits        : 6'd7, // The size of address in dmi
+                      abits        : 6'(NumDmiWordAbits), // The size of address in dmi
                       version      : 4'd1  // Version described in spec version 0.13 (and later?)
                     };
       end
@@ -113,7 +114,7 @@ module dmi_jtag #(
   logic          dmi_resp_ready;
 
   typedef struct packed {
-    logic [6:0]  address;
+    logic [NumDmiWordAbits-1:0]  address;
     logic [31:0] data;
     logic [1:0]  op;
   } dmi_t;
@@ -122,12 +123,12 @@ module dmi_jtag #(
   state_e state_d, state_q;
 
   logic [$bits(dmi_t)-1:0] dr_d, dr_q;
-  logic [6:0] address_d, address_q;
+  logic [NumDmiWordAbits-1:0] address_d, address_q;
   logic [31:0] data_d, data_q;
 
   dmi_t  dmi;
   assign dmi          = dmi_t'(dr_q);
-  assign dmi_req.addr = address_q;
+  assign dmi_req.addr = $bits(dmi_req.addr)'(address_q);
   assign dmi_req.data = data_q;
   assign dmi_req.op   = (state_q == Write) ? dm::DTM_WRITE : dm::DTM_READ;
   // We will always be ready to accept the data we requested.
@@ -328,6 +329,9 @@ module dmi_jtag #(
   // CDC
   // ---------
   dmi_cdc i_dmi_cdc (
+    // Test controls
+    //.testmode_i,
+    //.test_rst_ni,
     // JTAG side (master side)
     .tck_i                ( tck              ),
     .trst_ni              ( trst_ni          ),

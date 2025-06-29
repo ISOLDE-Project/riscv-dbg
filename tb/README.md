@@ -8,25 +8,12 @@ that can be run, but for now it is just `riscv test_compliance` of
 `pulpissimo.cfg`) and a not yet scripted run of gdb connecting to openocd,
 loading and running a hello world program (see `prog/test.c`).
 
-You need `riscv-openocd`.
-
-Running the testbench with vsim
-----------------------
-Point you environment variable `RISCV` to your RISC-V toolchain. Call `make
-vsim-run` to build the testbench and the program, and run it with vsim. Use
-`VSIM_FLAGS` to configure the simulator e.g. `make vsim-run VSIM_FLAGS="-gui
--debugdb"`.
-
-Running the testbench with vcs
-----------------------
-Point you environment variable `RISCV` to your RISC-V toolchain. Call `make
-vcs-run`. Use `VCS_FLAGS` and `SIMV_FLAGS` to configure vcs e.g. `make vcs-run
-VCS_FLAGS="-debug_all"`.
+You need `openocd`, it can be downloaded from [https://github.com/xpack-dev-tools/openocd-xpack/](https://github.com/xpack-dev-tools/openocd-xpack/).
 
 
 Running the testbench with [verilator](https://www.veripool.org/wiki/verilator)
 ----------------------
-Point you environment variable `RISCV` to your RISC-V toolchain. Call `make
+Point you environment variable `LLVM_TOOLCHAIN` to your RISC-V toolchain. Call `make
 veri-run`. Use `VERI_FLAGS` to configure verilator e.g. `make firmware-veri-run
 VERI_FLAGS="+firmware=path_to_firmware +vcd"` to use a custom firmware and dump
 to a vcd file.
@@ -49,3 +36,13 @@ Example Run
 3. (in new terminal) `export JTAG_VPI_PORT=port_name_from 1.`
 2. (in new terminal) `openocd -f dm_compliance_test.cfg`
 4. Now you can connect with gdb and interact with the testbench
+ISOLDE Example Run
+-----------------------
+In each terminal from bellow, make sure you run `. ./eth.sh`  
+1. `make veri-run`
+2. (in new terminal) `openocd -f dm_compliance_test.cfg`
+3. (in new terminal)  `riscv32-unknown-elf-gdb prog/test.elf`  
+  3.1 (in gdb terminal) `target extended-remote localhost:3333`
+  3.2 (in gdb terminal) `monitor reset halt`  
+  3.3 (in gdb terminal) `load`  
+  3.4 (in gdb terminal) `c`  --> **as per 27.03.2025 not working**
