@@ -48,7 +48,7 @@ sources:
     # Level 3
     - tb/jtag_dmi/tb_jtag_dmi.sv
 
-  - target: tb_dm
+  - target: all(not(any(fpga_sim,yosys)),tb_dm)
     files:
     - tb/SimJTAG.sv
     
