@@ -23,7 +23,7 @@ module dmi_jtag #(
   input  logic         clk_i,      // DMI Clock
   input  logic         rst_ni,     // Asynchronous reset active low
   input  logic         testmode_i,
-  input  logic         test_rst_ni,
+  //input  logic         test_rst_ni,
 
   // active-low glitch free reset signal. Is asserted
   // (clk_i) whenever the dmi_jtag is reset.
