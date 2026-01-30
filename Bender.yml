@@ -1,3 +1,4 @@
+# Copyleft 2026 ISOLDE
 # Copyright 2020-2021 ETH Zurich and University of Bologna.
 # Solderpad Hardware License, Version 0.51, see LICENSE for details.
 # SPDX-License-Identifier: SHL-0.51
@@ -12,6 +13,11 @@ dependencies:
   tech_cells_generic: { git: "https://github.com/pulp-platform/tech_cells_generic.git", version: 0.2.3 }
   common_cells: {git: "https://github.com/pulp-platform/common_cells.git", version: 1.24.0}
 
+# *                matches any target
+# name             matches the target "name"
+# all(T1, ..., TN) matches if all of the targets T1 to TN match (boolean AND)
+# any(T1, ..., TN) matches if any of the targets T1 to TN match (boolean OR)
+# not(T)           matches if target T does not match (boolean NOT)
 sources:
   files:
   # Level 1:
@@ -48,7 +54,7 @@ sources:
     # Level 3
     - tb/jtag_dmi/tb_jtag_dmi.sv
 
-  - target: all(not(any(fpga_sim,yosys)),tb_dm)
+  - target: all(not(yosys),any(tb_dm,fpga_sim))
     files:
     - tb/SimJTAG.sv
     
