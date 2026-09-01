@@ -20,6 +20,10 @@ dependencies:
 # not(T)           matches if target T does not match (boolean NOT)
 sources:
   files:
+  ## lowrisc RTL
+  - ../../vendor/lowrisc_ip/ip/prim/rtl/prim_fifo_sync.sv
+  - ../../vendor/lowrisc_ip/ip/prim/rtl/prim_fifo_sync_cnt.sv
+  - ../../vendor/lowrisc_ip/ip/prim/rtl/prim_flop_2sync.sv
   # Level 1:
   - src/dm_pkg.sv
   - debug_rom/debug_rom.sv
